@@ -2,6 +2,10 @@ defmodule CommandAndServiceTest do
   use ExUnit.Case
   doctest CommandAndService
 
+  test "sanitize input" do
+    assert CommandAndService.calculate_fuel_for_path("28801", "[[:launch, 9.807], [:land, 1.62], [:launch, 1.62], [:land, 9.807]]") == 51898
+  end
+
   test "assert launching from earth to the moon and landing again on earth" do
     assert CommandAndService.calculate_fuel_for_path(28801, [{:launch, 9.807}, {:land, 1.62}, {:launch, 1.62}, {:land, 9.807}]) == 51898
   end

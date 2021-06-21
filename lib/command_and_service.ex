@@ -6,6 +6,54 @@ defmodule CommandAndService do
   @type operation_gravity() :: {atom(), integer()}
 
   #  @doc """
+  #  tuplaize_args
+  #
+  #  ## Examples
+  #
+  #    iex> CommandAndService.tuplaize_args(":launch, 9.807")
+  #    {:launch, 9.807}
+  #
+  #  """
+
+  @spec sanatize(String.t()) :: operation_gravity()
+  defp tuplaize_args(str) do
+    [str_launch, str_gravity] =
+      str
+      |> String.slice(1..-1)
+      |> String.replace(" ", "")
+      |> String.split(",")
+
+    {gravity, ""} = Float.parse(str_gravity)
+    launch = String.to_atom(str_launch)
+    {launch, gravity}
+  end
+
+  #  @doc """
+  #  sanatize
+  #
+  #  ## Examples
+  #
+  #    iex> CommandAndService.tuplaize_args("[[:launch, 9.807], [:land, 1.62], [:launch, 1.62], [:land, 9.807]]")
+  #    [launch: 9.807, land: 1.62, launch: 1.62, land: 9.807]
+  #
+  #  """
+  @spec sanatize(String.t()) :: list(operation_gravity())
+  defp sanatize(commands) do
+    string_commands =
+      commands
+      |> String.slice(1..-1)
+      |> String.reverse()
+      |> String.slice(1..-1)
+      |> String.reverse()
+
+    ~r/\[+(.*?)\]+/
+    |> Regex.scan(string_commands)
+    |> Enum.map(fn [_ , element]->
+      tuplaize_args(element)
+    end)
+  end
+
+  #  @doc """
   #  Round number down
   #
   #  ## Examples
@@ -72,7 +120,25 @@ defmodule CommandAndService do
     51898
 
   """
-  @spec calculate_fuel_for_path(list(operation_gravity()), integer , integer) :: integer
+  @spec calculate_fuel_for_path(String.t(), String.t()) :: integer
+  def calculate_fuel_for_path(mass, commands) when is_binary(mass) and is_binary(commands) do
+    {mass, _} =
+      mass
+      |> Integer.parse()
+
+    calculate_fuel_for_path(mass, sanatize(commands))
+  end
+
+  @doc """
+  calculate total fuel needed for operation either landing or launching
+
+  ## Examples
+
+    iex> CommandAndService.calculate_fuel_for_path(28801, [{:launch, 9.807}, {:land, 1.62}, {:launch, 1.62}, {:land, 9.807}])
+    51898
+
+  """
+  @spec calculate_fuel_for_path(integer, list(operation_gravity())) :: integer
   def calculate_fuel_for_path(mass, commands) do
     commands
     |> Enum.reverse()
